@@ -11,7 +11,7 @@ Abre una terminal en la carpeta del proyecto e instala las dependencias:
 
 ```bash
 npm install
-
+ ```
 ## Ejecución
 Inicia el servidor:
 
