@@ -19,17 +19,17 @@ Inicia el servidor:
 npm start
  ```
 
-Por defecto el servidor corre en el puerto 3000. Para cambiar el puerto (por ejemplo, 5000), establece la variable de entorno y luego inicia:
+Por defecto el servidor corre en el puerto 80. Para cambiar el puerto (por ejemplo, 5000), establece la variable de entorno y luego inicia:
 
 ```bash
-set PORT=5000
+set PORT=3000
  ```
 
 ```bash
 npm start
  ```
 
-Abre http://localhost:3000 (o el puerto que elijas) en tu navegador.
+Abre http://localhost:80 (o el puerto que elijas) en tu navegador.
 
 ## Estructura del proyecto
 - server.js — Servidor Express y endpoints JSON
