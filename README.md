@@ -47,16 +47,7 @@ El archivo json/songs.json debe seguir la misma estructura JSON para cada canci�
 - Registra esa canción en json/songs.json siguiendo esta estructura:
 ```json
 [
-  {
-    "id": "song-001",
-    "title": "Mi Canción",
-    "artist": "Autor",
-    "album": null,
-    "genre": null,
-    "duration": 0,
-    "cover": null,
-    "url": "media/mi_cancion.mp3"
-  }
+  { "id": "s001", "title": "TEST", "artist": "Crisutf", "album": null, "genre": null, "duration": 0, "cover": null, "url": "media/industry_kiss.mp3" },
 ]
  ```
 
