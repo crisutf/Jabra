@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="220" height="40" viewBox="0 0 440 80" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc" preserveAspectRatio="xMidYMid meet">
+  <title id="title">Jabră Logo</title>
+  <desc id="desc">Liquid-glass style logo for Jabră: gradient glow ring with stylized J and play motif, plus wordmark.</desc>
+
+  <defs>
+    <linearGradient id="jg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7dd3fc"/>
+      <stop offset="100%" stop-color="#5eead4"/>
+    </linearGradient>
+
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+      <feColorMatrix in="blur" type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 0.35 0" result="soft"/>
+      <feMerge>
+        <feMergeNode in="soft"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <filter id="innerGlass" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="sa"/>
+      <feComposite in="SourceGraphic" in2="sa" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Mark -->
+  <g transform="translate(20,10)">
+    <!-- Gradient ring -->
+    <circle cx="32" cy="32" r="27" fill="none" stroke="url(#jg)" stroke-width="3" filter="url(#softGlow)"/>
+    <!-- Stylized J -->
+    <path d="M32 16v18c0
+             8-6 12-14 12h-6
+             "
+          fill="none" stroke="url(#jg)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" filter="url(#softGlow)"/>
+    <!-- Play motif -->
+    <polygon points="38,26 48,32 38,38" fill="url(#jg)" filter="url(#softGlow)"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g transform="translate(100,54)">
+    <text x="0" y="0" font-family="Segoe UI, Roboto, Arial, sans-serif" font-weight="700" font-size="36"
+          fill="url(#jg)" filter="url(#innerGlass)">Jabră</text>
+  </g>
+</svg>

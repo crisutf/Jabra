@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jabră • Mobile</title>
+  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous" />
+  <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
+  <meta name="theme-color" content="#0b1626">
+
+  <!-- {{ edit_2 }} mobile/tablet friendly styles for sidebar and touch targets -->
+  <style>
+    .sidebar { position: fixed; left: 0; top: 0; height: 100vh; width: 0; max-width: 320px; background: var(--surface); overflow: hidden; transition: width .25s ease; z-index: 1000; }
+    .sidebar.open { width: 72vw; }
+    .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 900; }
+    .sidebar-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar .nav-item { font-size: 1rem; padding: 14px; }
+    .header .search input { font-size: 1rem; padding: 10px; }
+    .controls .btn { font-size: 1.2rem; padding: 12px; }
+    .time-row input[type="range"] { height: 24px; }
+    .volume-row input[type="range"] { height: 24px; }
+
+    /* Tablet and up: show static sidebar */
+    @media (min-width: 768px) {
+      .shell { display: grid; grid-template-columns: 300px 1fr; }
+      .sidebar { position: static; height: auto; width: 300px; }
+      .sidebar.open { width: 300px; }
+      .sidebar-overlay { display: none; }
+      .sidebar-toggle { display: none; }
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1100;
+      background: var(--surface);
+      border: none;
+      color: var(--on-surface);
+      padding: 10px 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+  </style>
+</head>
+<!-- {{ edit_3 }} set correct mobile class -->
+<body class="device-mobile">
+  <!-- {{ edit_4 }} hamburger button for mobile -->
+  <button id="sidebarToggle" class="sidebar-toggle" aria-label="Open navigation"><i class="fas fa-bars"></i></button>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <!-- {{ edit_1 }} replace text logo with SVG -->
+      <div class="logo">
+        <img class="logo-img" src="img/jabra.logo.svg" alt="Jabră" />
+      </div>
+      <nav class="nav-menu" aria-label="Navigation">
+        <button class="nav-item active" data-playlist="all"><i class="fas fa-music"></i><span>All Songs</span></button>
+        <button class="nav-item" data-playlist="devices"><i class="fas fa-network-wired"></i><span>Devices</span></button>
+      </nav>
+      <div class="footer">Made by Crisutf</div>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div class="search" aria-label="Search">
+          <i class="fas fa-search"></i>
+          <input id="searchInput" type="text" placeholder="Search songs..." />
+        </div>
+        <div class="badge">Most Played: <span id="mostPlayed">—</span></div>
+      </header>
+
+      <section class="now-playing" aria-label="Now Playing">
+        <div id="cover" class="cover"></div>
+        <div class="np-meta">
+          <div class="np-title" id="npTitle">No song selected</div>
+          <div class="np-artist" id="npArtist">—</div>
+
+          <div class="controls">
+            <button id="prevBtn" class="btn" aria-label="Previous"><i class="fas fa-backward"></i></button>
+            <button id="playPauseBtn" class="btn" aria-label="Play/Pause"><i class="fas fa-play"></i></button>
+            <button id="nextBtn" class="btn" aria-label="Next"><i class="fas fa-forward"></i></button>
+            <button id="shuffleBtn" class="btn" aria-label="Shuffle"><i class="fas fa-random"></i></button>
+            <button id="repeatBtn" class="btn" aria-label="Repeat"><i class="fas fa-redo"></i></button>
+            <button class="btn" aria-label="Mute/Unmute" onclick="document.getElementById('audioEl').muted = !document.getElementById('audioEl').muted"><i class="fas fa-volume-off"></i></button>
+          </div>
+
+          <div class="time-row">
+            <div id="currentTime">0:00</div>
+            <input id="seekRange" type="range" min="0" max="100" step="0.1" aria-label="Seek" />
+            <div id="totalTime">0:00</div>
+          </div>
+
+          <div class="volume-row">
+            <span>Volume</span>
+            <input id="volumeRange" type="range" min="0" max="1" step="0.01" aria-label="Volume" />
+          </div>
+        </div>
+      </section>
+
+      <section class="song-list" id="songList" aria-label="Song list"></section>
+
+      <audio id="audioEl" preload="metadata"></audio>
+    </main>
+  </div>
+
+  <!-- {{ edit_5 }} overlay to close sidebar on tap -->
+  <div id="sidebarOverlay" class="sidebar-overlay"></div>
+
+  <script src="js/app.js" defer></script>
+  <!-- {{ edit_6 }} minimal toggle script -->
+  <script>
+    (function() {
+      const sidebar = document.querySelector('.sidebar');
+      const toggle = document.getElementById('sidebarToggle');
+      const overlay = document.getElementById('sidebarOverlay');
+
+      function openSidebar() {
+        sidebar.classList.add('open');
+        overlay.classList.add('show');
+      }
+      function closeSidebar() {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('show');
+      }
+
+      toggle?.addEventListener('click', () => {
+        if (sidebar.classList.contains('open')) closeSidebar();
+        else openSidebar();
+      });
+      overlay?.addEventListener('click', closeSidebar);
+    })();
+  </script>
+</body>
+</html>
