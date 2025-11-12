@@ -58,10 +58,5 @@ Notas:
 - duration : puede ser 0 si no lo conoces; la app mostrará el tiempo al reproducir.
 - cover : opcional; si no tienes portada, deja null .
 - url : ruta relativa al archivo dentro de media/ .
-Si más adelante quieres usar múltiples canciones, repite el mismo formato (un objeto por canción dentro del arreglo). Para mantener el repositorio liviano, es preferible usar archivos pequeños o URLs externas.
+Si más adelante quieres usar múltiples canciones, repite el mismo formato (un objeto por canción dentro del arreglo). Para no tener errores no repitais el id de la cancion y respetar el JSON.
 
-## Mantener el repositorio liviano
-- Evita subir audios pesados. Si es posible, usa URLs externas en json/songs.json .
-- Los archivos de estado del servidor están ignorados por Git:
-  - json/playcounts.server.json
-  - json/devices.server.json
