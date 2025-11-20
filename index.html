@@ -1,45 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Jabră • Redirect</title>
+  <title>Jabră • Redirecting</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: system-ui;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+  </style>
   <script>
-    (function() {
-      const params = new URLSearchParams(location.search);
-      const override = params.get('device');
-      const last = localStorage.getItem('jabra_last_device');
+    (function () {
+      const isMobile = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+      const target = isMobile ? 'index.mobile.html' : 'index.desktop.html';
 
-      // REMOVED unused variable to avoid minor issues
-      // const ua = navigator.userAgent.toLowerCase();
-
-      // {{ edit_1 }} add reset support
-      const reset = params.get('reset');
-      if (reset === '1') {
-        localStorage.removeItem('jabra_last_device');
-      }
-
-      function isMobile() {
-        return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
-      }
-
-      let target = 'index.desktop.html';
-      // {{ edit_2 }} prioritize override, then last, then detection
-      const map = { tv: 'index.tv.html', mobile: 'index.mobile.html', desktop: 'index.desktop.html' };
-      if (override && map[override]) {
-        target = map[override];
-      } else if (last) {
-        target = last;
-      } else if (isMobile()) {
-        target = 'index.mobile.html';
-      }
-
-      localStorage.setItem('jabra_last_device', target);
-      location.replace(target);
+      // Preserve query params if any
+      const search = window.location.search;
+      window.location.replace(target + search);
     })();
   </script>
 </head>
+
 <body>
-  Redirecting…
+  Redirecting...
 </body>
+
 </html>

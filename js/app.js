@@ -1,24 +1,34 @@
 class MusicPlayer {
     constructor() {
-        // Core DOM
+        // Core DOM Elements
         this.audio = document.getElementById('audioEl');
         this.songListEl = document.getElementById('songList');
-        this.playPauseBtn = document.getElementById('playPauseBtn');
-        this.prevBtn = document.getElementById('prevBtn');
-        this.nextBtn = document.getElementById('nextBtn');
-        this.shuffleBtn = document.getElementById('shuffleBtn');
-        this.repeatBtn = document.getElementById('repeatBtn');
-        this.volumeRange = document.getElementById('volumeRange');
-        this.seekRange = document.getElementById('seekRange');
+
+        // Controls
+        this.btnPlayPause = document.getElementById('btnPlayPause');
+        this.btnPrev = document.getElementById('btnPrev');
+        this.btnNext = document.getElementById('btnNext');
+        this.btnShuffle = document.getElementById('btnShuffle');
+        this.btnRepeat = document.getElementById('btnRepeat');
+
+        // Progress & Volume
+        this.progressBar = document.getElementById('progressBar');
+        this.progressFill = document.getElementById('progressFill');
         this.currentTimeEl = document.getElementById('currentTime');
         this.totalTimeEl = document.getElementById('totalTime');
-        this.npTitle = document.getElementById('npTitle');
-        this.npArtist = document.getElementById('npArtist');
-        this.coverEl = document.getElementById('cover');
+        this.volumeSlider = document.getElementById('volumeSlider');
 
-        // Optional elements (desktop only)
-        this.searchInput = document.getElementById('searchInput') || null;
-        this.mostPlayedEl = document.getElementById('mostPlayed') || null;
+        // Meta
+        this.playerTitle = document.getElementById('playerTitle');
+        this.playerArtist = document.getElementById('playerArtist');
+        this.playerCover = document.getElementById('playerCover');
+        this.headerBadge = document.getElementById('headerBadge');
+        this.searchInput = document.getElementById('searchInput');
+
+        // Mobile UI
+        this.sidebar = document.getElementById('sidebar');
+        this.mobileOverlay = document.getElementById('mobileOverlay');
+        this.mobileNavToggle = document.getElementById('mobileNavToggle');
 
         // State
         this.state = {
@@ -29,24 +39,16 @@ class MusicPlayer {
             isShuffled: false,
             repeatMode: 'off', // 'off' | 'all' | 'one'
             volume: parseFloat(localStorage.getItem('volume') ?? 0.8),
-            favorites: new Set(),
-            // {{ edit_1 }} REMOVED TV-specific state: focusIndex and isTv
-            isMobile: document.body.classList.contains('device-mobile'),
+            viewMode: 'songs', // 'songs' | 'devices'
+            deviceList: [],
             playCounts: JSON.parse(localStorage.getItem('playCounts') || '{}'),
-            viewMode: 'songs',              // 'songs' | 'devices'
-            devicePollTimer: null,
-            deviceList: []
+            deviceId: this.getDeviceId()
         };
 
-        // Internal flags
-        this._counted = false;
-
-        // Base URL and heartbeat
         this.baseUrl = window.location.origin;
+        this._counted = false;
         this._heartbeatTimer = null;
-
-        // Persistent device ID
-        this.deviceId = this.getDeviceId();
+        this._devicePollTimer = null;
 
         this.init();
     }
@@ -54,43 +56,24 @@ class MusicPlayer {
     async init() {
         await this.loadSongs();
         this.setupEventListeners();
-        // {{ edit_2 }} REMOVED TV setup
-        // if (this.state.isTv) this.setupTvControls();
         this.restoreState();
         this.updateMostPlayedBadge();
-        this.syncPreferredLayout();
-
-        // Start heartbeat and status wiring
         this.startHeartbeat();
-        window.addEventListener('beforeunload', () => this.postStatus(null, false));
+
+        // Initial Volume
+        this.audio.volume = this.state.volume;
+        if (this.volumeSlider) this.volumeSlider.value = this.state.volume;
+
+        // Visibility API
         document.addEventListener('visibilitychange', () => {
-            const song = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
+            const song = this.getCurrentSong();
             this.postStatus(song, this.state.isPlaying);
         });
+        window.addEventListener('beforeunload', () => this.postStatus(null, false));
     }
 
-    // Preferred layout helpers (desktop | mobile | tv)
-    getLayoutFromBody() {
-        if (document.body.classList.contains('device-tv')) return 'tv';
-        if (document.body.classList.contains('device-mobile')) return 'mobile';
-        return 'desktop';
-    }
-    getPreferredLayout() {
-        return localStorage.getItem('preferredLayout') || 'desktop';
-    }
-    setPreferredLayout(layout) {
-        if (!['desktop', 'mobile', 'tv'].includes(layout)) return;
-        localStorage.setItem('preferredLayout', layout);
-        fetch(`${this.baseUrl}/api/layout`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ layout })
-        }).catch(() => {});
-    }
-    syncPreferredLayout() {
-        const current = this.getLayoutFromBody();
-        const stored = this.getPreferredLayout();
-        if (stored !== current) this.setPreferredLayout(current);
+    getCurrentSong() {
+        return this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
     }
 
     async loadSongs() {
@@ -100,7 +83,7 @@ class MusicPlayer {
             const data = await res.json();
             this.state.songs = Array.isArray(data) ? data : [];
         } catch (e) {
-            console.warn('Failed to load json/songs.json:', e);
+            console.warn('Failed to load songs:', e);
             this.state.songs = [];
         }
         this.state.queue = [...this.state.songs];
@@ -111,25 +94,96 @@ class MusicPlayer {
         if (!this.songListEl) return;
         this.songListEl.innerHTML = '';
 
+        if (this.state.viewMode === 'devices') {
+            this.renderDeviceList();
+            return;
+        }
+
         this.state.queue.forEach((song, index) => {
             const row = document.createElement('div');
-            row.className = 'song-item';
+            row.className = 'song-row';
             row.dataset.index = String(index);
             row.dataset.id = song.id;
+
+            // Highlight if playing
+            if (this.state.currentIndex === index) row.classList.add('active');
+
             row.innerHTML = `
-                <div class="index">${index + 1}</div>
-                <div class="title">${song.title || 'Unknown'}</div>
-                <div class="artist">${song.artist || '—'}</div>
-                <div class="album">${song.album || '—'}</div>
-                <div class="duration">${song.duration ? this.formatTime(song.duration) : '—'}</div>
+                <div class="song-index">${this.state.currentIndex === index ? '<i class="fas fa-volume-high"></i>' : index + 1}</div>
+                <div class="song-title">${song.title || 'Unknown'}</div>
+                <div class="song-artist">${song.artist || 'Unknown Artist'}</div>
+                <div class="song-duration">${this.formatTime(song.duration)}</div>
             `;
+
             row.addEventListener('click', () => this.playSong(index));
             this.songListEl.appendChild(row);
         });
+    }
 
-        this.highlightPlayingRow();
-        // {{ edit_3 }} REMOVED TV focus highlight
-        // if (this.state.isTv) this.highlightFocusRow();
+    renderDeviceList() {
+        // Ensure header exists
+        let header = this.songListEl.querySelector('.device-header');
+        if (!header) {
+            this.songListEl.innerHTML = ''; // Clear only if we are initializing the view
+            header = document.createElement('div');
+            header.className = 'song-row device-header';
+            header.style.cursor = 'default';
+            header.style.background = 'transparent';
+            header.innerHTML = `
+                <div class="song-index">#</div>
+                <div class="song-title">Device IP</div>
+                <div class="song-artist">Status</div>
+                <div class="song-duration"></div>
+            `;
+            this.songListEl.appendChild(header);
+        }
+
+        // Track existing IDs to remove stale ones
+        const currentIds = new Set(this.state.deviceList.map(d => d.deviceId || d.ip));
+
+        // Update or Create rows
+        this.state.deviceList.forEach((d, i) => {
+            const id = d.deviceId || d.ip;
+            let row = this.songListEl.querySelector(`.song-row[data-device-id="${id}"]`);
+
+            const statusText = d.isPlaying ? 'Playing' : 'Paused';
+            const songText = d.song ? `${d.song.title} — ${d.song.artist}` : 'No Song';
+            const statusHtml = `
+                <span class="status-indicator ${d.isPlaying ? 'playing' : 'paused'}"></span>
+                <span class="device-status-text">${statusText}</span>
+                <span class="device-song-text">${songText}</span>
+            `;
+
+            if (row) {
+                // Update existing
+                const statusEl = row.querySelector('.song-artist');
+                if (statusEl.innerHTML !== statusHtml) statusEl.innerHTML = statusHtml;
+
+                // Update index if needed
+                const indexEl = row.querySelector('.song-index');
+                if (indexEl.textContent !== String(i + 1)) indexEl.textContent = i + 1;
+            } else {
+                // Create new
+                row = document.createElement('div');
+                row.className = 'song-row device-row';
+                row.dataset.deviceId = id;
+                row.innerHTML = `
+                    <div class="song-index">${i + 1}</div>
+                    <div class="song-title">${d.ip || 'Unknown IP'}</div>
+                    <div class="song-artist">${statusHtml}</div>
+                    <div class="song-duration"></div>
+                `;
+                this.songListEl.appendChild(row);
+            }
+        });
+
+        // Remove stale rows
+        const allRows = this.songListEl.querySelectorAll('.device-row');
+        allRows.forEach(row => {
+            if (!currentIds.has(row.dataset.deviceId)) {
+                row.remove();
+            }
+        });
     }
 
     playSong(index) {
@@ -139,15 +193,14 @@ class MusicPlayer {
         const song = this.state.queue[index];
 
         if (!song?.url) return;
+
         this.audio.src = song.url;
         this._counted = false;
 
         this.audio.play()
             .then(() => {
                 this.state.isPlaying = true;
-                this.updatePlayPauseButton();
-                this.updateNowPlaying(song);
-                this.highlightPlayingRow();
+                this.updateUI();
                 this.persistState();
                 this.postStatus(song, true);
             })
@@ -155,40 +208,33 @@ class MusicPlayer {
     }
 
     togglePlayPause() {
-        // FIX: avoid race conditions on audio.play() and update status only when state changes
         if (this.state.currentIndex === -1 && this.state.queue.length > 0) {
             this.playSong(0);
             return;
         }
 
         if (this.audio.paused) {
-            this.audio.play()
-                .then(() => {
-                    this.state.isPlaying = true;
-                    this.updatePlayPauseButton();
-                    const song = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
-                    if (song) this.postStatus(song, true);
-                })
-                .catch(err => console.error('Playback failed:', err));
+            this.audio.play().then(() => {
+                this.state.isPlaying = true;
+                this.updateUI();
+                this.postStatus(this.getCurrentSong(), true);
+            });
         } else {
             this.audio.pause();
             this.state.isPlaying = false;
-            this.updatePlayPauseButton();
-            const song = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
-            if (song) this.postStatus(song, false);
+            this.updateUI();
+            this.postStatus(this.getCurrentSong(), false);
         }
     }
 
     nextSong() {
         if (this.state.queue.length === 0) return;
-        const lastIndex = this.state.queue.length - 1;
         let nextIdx = this.state.currentIndex + 1;
-
-        if (nextIdx > lastIndex) {
+        if (nextIdx >= this.state.queue.length) {
             if (this.state.repeatMode === 'all') nextIdx = 0;
             else {
                 this.state.isPlaying = false;
-                this.updatePlayPauseButton();
+                this.updateUI();
                 return;
             }
         }
@@ -197,8 +243,13 @@ class MusicPlayer {
 
     prevSong() {
         if (this.state.queue.length === 0) return;
-        let prevIdx = this.state.currentIndex - 1;
+        // If > 3 seconds in, restart song
+        if (this.audio.currentTime > 3) {
+            this.audio.currentTime = 0;
+            return;
+        }
 
+        let prevIdx = this.state.currentIndex - 1;
         if (prevIdx < 0) {
             if (this.state.repeatMode === 'all') prevIdx = this.state.queue.length - 1;
             else prevIdx = 0;
@@ -208,10 +259,10 @@ class MusicPlayer {
 
     toggleShuffle() {
         this.state.isShuffled = !this.state.isShuffled;
+        const currentSong = this.getCurrentSong();
 
-        const currentSong = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
         if (this.state.isShuffled) {
-            // Shuffle songs
+            // Fisher-Yates shuffle
             const arr = [...this.state.songs];
             for (let i = arr.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -222,149 +273,212 @@ class MusicPlayer {
             this.state.queue = [...this.state.songs];
         }
 
-        // Keep current song selection if any
+        // Re-sync index
         if (currentSong) {
-            const idx = this.state.queue.findIndex(s => s.id === currentSong.id);
-            this.state.currentIndex = idx !== -1 ? idx : -1;
+            this.state.currentIndex = this.state.queue.findIndex(s => s.id === currentSong.id);
         }
 
+        this.btnShuffle.classList.toggle('active', this.state.isShuffled);
         this.renderSongList();
-        this.highlightPlayingRow();
         this.persistState();
-    }
-
-    handleSongEnd() {
-        // count if user scrubbed fast and <30s wasn’t reached
-        if (!this._counted && this.state.currentIndex >= 0) {
-            const id = this.state.queue[this.state.currentIndex].id;
-            this.incrementPlayCount(id);
-            this._counted = true;
-        }
-
-        const song = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
-        if (song) this.postStatus(song, false);
-
-        if (this.state.repeatMode === 'one') {
-            this.audio.currentTime = 0;
-            this.audio.play();
-        } else {
-            this.nextSong();
-        }
-    }
-
-    setupEventListeners() {
-        // Buttons
-        this.playPauseBtn?.addEventListener('click', () => this.togglePlayPause());
-        this.prevBtn?.addEventListener('click', () => this.prevSong());
-        this.nextBtn?.addEventListener('click', () => this.nextSong());
-        this.shuffleBtn?.addEventListener('click', () => this.toggleShuffle());
-        this.repeatBtn?.addEventListener('click', () => this.toggleRepeat());
-        this.volumeRange?.addEventListener('input', () => this.setVolume());
-        this.seekRange?.addEventListener('input', () => this.seekAudio());
-
-        // Audio events
-        this.audio.addEventListener('timeupdate', () => {
-            this.updateTime();
-            // count a play after 30s of listening
-            if (!this._counted && this.audio.currentTime >= 30 && this.state.currentIndex >= 0) {
-                const id = this.state.queue[this.state.currentIndex].id;
-                this.incrementPlayCount(id);
-                this._counted = true;
-            }
-        });
-        this.audio.addEventListener('ended', () => this.handleSongEnd());
-        this.audio.addEventListener('loadedmetadata', () => this.updateDuration());
-
-        // Search
-        if (this.searchInput) {
-            this.searchInput.addEventListener('input', () => this.searchSongs(this.searchInput.value));
-            const icon = this.searchInput.previousElementSibling;
-            icon?.addEventListener('click', () => this.searchInput.focus());
-        }
-
-        // Playlist filters
-        document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-                item.classList.add('active');
-                this.filterSongs(item.dataset.playlist);
-            });
-        });
     }
 
     toggleRepeat() {
         const modes = ['off', 'all', 'one'];
         const next = (modes.indexOf(this.state.repeatMode) + 1) % modes.length;
         this.state.repeatMode = modes[next];
-        if (this.repeatBtn) {
-            this.repeatBtn.innerHTML = `<i class="fas fa-redo"></i>`;
-            this.repeatBtn.style.color = this.state.repeatMode === 'off' ? '' : 'var(--primary)';
-        }
+
+        this.btnRepeat.classList.toggle('active', this.state.repeatMode !== 'off');
+        // Optional: Change icon for 'one'
+        if (this.state.repeatMode === 'one') this.btnRepeat.innerHTML = '<i class="fas fa-repeat"></i><span style="font-size:8px;position:absolute;">1</span>';
+        else this.btnRepeat.innerHTML = '<i class="fas fa-repeat"></i>';
+
         this.persistState();
     }
 
-    // Search/filter
-    searchSongs(query) {
-        const searchTerm = (query || '').toLowerCase();
-        this.state.queue = this.state.songs.filter(song =>
-            (song.title || '').toLowerCase().includes(searchTerm) ||
-            (song.artist || '').toLowerCase().includes(searchTerm) ||
-            (song.album || '').toLowerCase().includes(searchTerm)
-        );
-        this.renderSongList();
-        this.highlightPlayingRow();
+    seekAudio(e) {
+        if (!this.audio.duration) return;
+        const rect = this.progressBar.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        this.audio.currentTime = pos * this.audio.duration;
     }
 
-    filterSongs(filter) {
-        switch (filter) {
-            case 'devices':
-                this.state.viewMode = 'devices';
-                this.startDevicePolling();
-                this.renderDeviceList();
-                return;
+    setVolume() {
+        const v = parseFloat(this.volumeSlider.value);
+        this.audio.volume = v;
+        this.state.volume = v;
+        localStorage.setItem('volume', String(v));
+    }
 
-            case 'favorites':
-                this.state.queue = this.state.songs.filter(song => this.state.favorites.has(song.id));
-                break;
-
-            case 'all':
-            default:
-                this.state.viewMode = 'songs';
-                this.stopDevicePolling();
-                this.state.queue = [...this.state.songs];
-                break;
+    updateUI() {
+        // Play/Pause Button
+        if (this.btnPlayPause) {
+            this.btnPlayPause.innerHTML = this.state.isPlaying
+                ? '<i class="fas fa-pause-circle"></i>'
+                : '<i class="fas fa-play-circle"></i>';
         }
-        this.renderSongList();
-        this.highlightPlayingRow();
+
+        // Now Playing Info
+        const song = this.getCurrentSong();
+        if (this.playerTitle) this.playerTitle.textContent = song?.title || 'Not Playing';
+        if (this.playerArtist) this.playerArtist.textContent = song?.artist || '—';
+
+        // Cover Art
+        if (this.playerCover) {
+            if (song?.cover) {
+                this.playerCover.style.backgroundImage = `url('${song.cover}')`;
+            } else {
+                this.playerCover.style.backgroundImage = 'linear-gradient(135deg, #333, #111)';
+            }
+        }
+
+        // Highlight active row
+        const rows = this.songListEl.querySelectorAll('.song-row');
+        rows.forEach(r => r.classList.remove('active'));
+        if (this.state.currentIndex >= 0) {
+            const activeRow = this.songListEl.querySelector(`[data-index="${this.state.currentIndex}"]`);
+            if (activeRow) {
+                activeRow.classList.add('active');
+                // Update index to icon
+                const idxEl = activeRow.querySelector('.song-index');
+                if (idxEl) idxEl.innerHTML = '<i class="fas fa-volume-high"></i>';
+            }
+        }
     }
 
-    renderDeviceList() {
-        if (!this.songListEl) return;
-        this.songListEl.innerHTML = '';
+    updateTime() {
+        const curr = this.audio.currentTime || 0;
+        const dur = this.audio.duration || 0;
 
-        const header = document.createElement('div');
-        header.className = 'song-item devices-header';
-        header.innerHTML = `
-            <div class="index">#</div>
-            <div class="title">IP</div>
-            <div class="artist">Device</div>
-            <div class="album">Song</div>
-            <div class="duration">Status</div>
-        `;
-        this.songListEl.appendChild(header);
+        if (this.currentTimeEl) this.currentTimeEl.textContent = this.formatTime(curr);
+        if (this.totalTimeEl) this.totalTimeEl.textContent = this.formatTime(dur);
 
-        this.state.deviceList.forEach((d, i) => {
-            const row = document.createElement('div');
-            row.className = 'song-item';
-            row.innerHTML = `
-                <div class="index">${i + 1}</div>
-                <div class="title">${d.ip || '—'}</div>
-                <div class="artist">${d.deviceId || '—'}</div>
-                <div class="album">${d.song ? `${d.song.title} — ${d.song.artist}` : '—'}</div>
-                <div class="duration">${d.isPlaying ? 'Playing' : 'Paused'}</div>
-            `;
-            this.songListEl.appendChild(row);
+        if (dur > 0 && this.progressFill) {
+            const pct = (curr / dur) * 100;
+            this.progressFill.style.width = `${pct}%`;
+        }
+    }
+
+    setupEventListeners() {
+        // Transport
+        this.btnPlayPause?.addEventListener('click', () => this.togglePlayPause());
+        this.btnNext?.addEventListener('click', () => this.nextSong());
+        this.btnPrev?.addEventListener('click', () => this.prevSong());
+        this.btnShuffle?.addEventListener('click', () => this.toggleShuffle());
+        this.btnRepeat?.addEventListener('click', () => this.toggleRepeat());
+
+        // Seek & Volume
+        this.progressBar?.addEventListener('click', (e) => this.seekAudio(e));
+        this.volumeSlider?.addEventListener('input', () => this.setVolume());
+
+        // Audio Events
+        this.audio.addEventListener('timeupdate', () => {
+            this.updateTime();
+            // Play count logic (>30s)
+            if (!this._counted && this.audio.currentTime >= 30 && this.state.currentIndex >= 0) {
+                const id = this.state.queue[this.state.currentIndex].id;
+                this.incrementPlayCount(id);
+                this._counted = true;
+            }
         });
+        this.audio.addEventListener('ended', () => {
+            if (this.state.repeatMode === 'one') {
+                this.audio.currentTime = 0;
+                this.audio.play();
+            } else {
+                this.nextSong();
+            }
+        });
+        this.audio.addEventListener('loadedmetadata', () => this.updateTime());
+
+        // Search
+        this.searchInput?.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            if (!term) {
+                this.state.queue = [...this.state.songs];
+            } else {
+                this.state.queue = this.state.songs.filter(s =>
+                    (s.title || '').toLowerCase().includes(term) ||
+                    (s.artist || '').toLowerCase().includes(term)
+                );
+            }
+            this.renderSongList();
+        });
+
+        // Navigation
+        document.querySelectorAll('.nav-item').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const view = btn.dataset.view;
+                this.state.viewMode = view;
+
+                if (view === 'devices') this.startDevicePolling();
+                else this.stopDevicePolling();
+
+                this.renderSongList();
+                // Close mobile sidebar on nav click
+                this.closeSidebar();
+            });
+        });
+
+        // Mobile Sidebar
+        this.mobileNavToggle?.addEventListener('click', () => this.openSidebar());
+        this.mobileOverlay?.addEventListener('click', () => this.closeSidebar());
+    }
+
+    openSidebar() {
+        this.sidebar.classList.add('open');
+        this.mobileOverlay.classList.add('show');
+    }
+    closeSidebar() {
+        this.sidebar.classList.remove('open');
+        this.mobileOverlay.classList.remove('show');
+    }
+
+    // --- Helpers & API ---
+
+    formatTime(s = 0) {
+        if (!s || isNaN(s)) return '0:00';
+        const m = Math.floor(s / 60);
+        const sec = Math.floor(s % 60);
+        return `${m}:${sec < 10 ? '0' : ''}${sec}`;
+    }
+
+    getDeviceId() {
+        let id = localStorage.getItem('deviceId');
+        if (!id) {
+            id = 'dev-' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('deviceId', id);
+        }
+        return id;
+    }
+
+    incrementPlayCount(id) {
+        this.state.playCounts[id] = (this.state.playCounts[id] || 0) + 1;
+        localStorage.setItem('playCounts', JSON.stringify(this.state.playCounts));
+        this.updateMostPlayedBadge();
+
+        fetch(`${this.baseUrl}/api/play`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id })
+        }).catch(() => { });
+    }
+
+    updateMostPlayedBadge() {
+        if (!this.headerBadge) return;
+        const entries = Object.entries(this.state.playCounts);
+        if (!entries.length) {
+            this.headerBadge.textContent = 'Most Played: —';
+            return;
+        }
+        entries.sort((a, b) => b[1] - a[1]);
+        const [topId, count] = entries[0];
+        const song = this.state.songs.find(s => s.id === topId);
+        this.headerBadge.textContent = song
+            ? `Most Played: ${song.title} (${count})`
+            : 'Most Played: —';
     }
 
     startDevicePolling() {
@@ -372,152 +486,41 @@ class MusicPlayer {
         const poll = async () => {
             try {
                 const res = await fetch(`${this.baseUrl}/api/devices`);
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const list = await res.json();
-                this.state.deviceList = Array.isArray(list) ? list : [];
-                if (this.state.viewMode === 'devices') this.renderDeviceList();
-            } catch (e) {
-                console.warn('Device poll failed:', e);
-            }
+                if (res.ok) {
+                    this.state.deviceList = await res.json();
+                    if (this.state.viewMode === 'devices') this.renderDeviceList();
+                }
+            } catch (e) { }
         };
         poll();
-        this.state.devicePollTimer = setInterval(poll, 5000);
+        this._devicePollTimer = setInterval(poll, 5000);
     }
     stopDevicePolling() {
-        if (this.state.devicePollTimer) {
-            clearInterval(this.state.devicePollTimer);
-            this.state.devicePollTimer = null;
-        }
+        if (this._devicePollTimer) clearInterval(this._devicePollTimer);
+    }
+
+    startHeartbeat() {
+        if (this._heartbeatTimer) clearInterval(this._heartbeatTimer);
+        this._heartbeatTimer = setInterval(() => {
+            this.postStatus(this.getCurrentSong(), this.state.isPlaying);
+        }, 10000);
+        this.postStatus(this.getCurrentSong(), this.state.isPlaying);
     }
 
     async postStatus(song, isPlaying) {
         try {
-            const payload = {
-                deviceId: this.deviceId,
-                songId: song?.id ?? null,
-                isPlaying: !!isPlaying,
-                title: song?.title ?? null,
-                artist: song?.artist ?? null
-            };
-            const res = await fetch(`${this.baseUrl}/api/status`, {
+            await fetch(`${this.baseUrl}/api/status`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({
+                    deviceId: this.state.deviceId,
+                    songId: song?.id ?? null,
+                    isPlaying: !!isPlaying,
+                    title: song?.title ?? null,
+                    artist: song?.artist ?? null
+                })
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        } catch (err) {
-            console.warn('postStatus failed:', err);
-        }
-    }
-
-    // Heartbeat every 10s so device stays visible
-    startHeartbeat() {
-        this.stopHeartbeat();
-        this._heartbeatTimer = setInterval(() => {
-            const song = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
-            this.postStatus(song, this.state.isPlaying);
-        }, 10000);
-        // initial ping
-        const song = this.state.currentIndex >= 0 ? this.state.queue[this.state.currentIndex] : null;
-        this.postStatus(song, this.state.isPlaying);
-    }
-    stopHeartbeat() {
-        if (this._heartbeatTimer) {
-            clearInterval(this._heartbeatTimer);
-            this._heartbeatTimer = null;
-        }
-    }
-
-    getDeviceId() {
-        const existing = localStorage.getItem('deviceId');
-        if (existing) return existing;
-        const rand = (crypto && crypto.getRandomValues)
-            ? crypto.getRandomValues(new Uint32Array(2)).join('-')
-            : `${Date.now()}-${Math.random()}`;
-        const id = `dev-${rand}`;
-        localStorage.setItem('deviceId', id);
-        return id;
-    }
-
-    updateTime() {
-        const currentTime = this.audio.currentTime || 0;
-        if (this.currentTimeEl) this.currentTimeEl.textContent = this.formatTime(currentTime);
-
-        if (this.audio.duration && isFinite(this.audio.duration)) {
-            const progress = (currentTime / this.audio.duration) * 100;
-            if (this.seekRange) this.seekRange.value = String(progress);
-        }
-    }
-
-    updateDuration() {
-        const dur = (this.audio.duration && isFinite(this.audio.duration))
-            ? this.audio.duration
-            : (this.state.currentIndex >= 0 ? (this.state.queue[this.state.currentIndex]?.duration || 0) : 0);
-        if (this.totalTimeEl) this.totalTimeEl.textContent = this.formatTime(dur);
-    }
-
-    seekAudio() {
-        if (!this.audio.duration || !isFinite(this.audio.duration)) return;
-        const seekTime = (parseFloat(this.seekRange.value) / 100) * this.audio.duration;
-        this.audio.currentTime = seekTime;
-    }
-
-    setVolume() {
-        const v = parseFloat(this.volumeRange.value);
-        this.audio.volume = isNaN(v) ? 0.8 : v;
-        this.state.volume = this.audio.volume;
-        localStorage.setItem('volume', String(this.state.volume));
-    }
-
-    formatTime(seconds = 0) {
-        const s = Math.max(0, Math.floor(seconds));
-        const mins = Math.floor(s / 60);
-        const secs = s % 60;
-        return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
-    }
-
-    highlightPlayingRow() {
-        if (!this.songListEl) return;
-        Array.from(this.songListEl.children).forEach(r => r.classList.remove('playing'));
-        if (this.state.currentIndex >= 0) {
-            const row = this.songListEl.querySelector(`[data-index="${this.state.currentIndex}"]`);
-            row?.classList.add('playing');
-        }
-    }
-
-    setupTvControls() {
-        this.state.focusIndex = Math.max(0, Math.min(this.state.queue.length - 1, this.state.focusIndex));
-        this.highlightFocusRow();
-
-        document.addEventListener('keydown', (e) => {
-            const max = this.state.queue.length - 1;
-            if (['ArrowDown','ArrowUp','Enter',' '].includes(e.key) || e.code === 'MediaPlayPause') e.preventDefault();
-
-            switch (e.key) {
-                case 'ArrowDown':
-                    this.state.focusIndex = Math.min(max, this.state.focusIndex + 1);
-                    this.highlightFocusRow();
-                    break;
-                case 'ArrowUp':
-                    this.state.focusIndex = Math.max(0, this.state.focusIndex - 1);
-                    this.highlightFocusRow();
-                    break;
-                case 'Enter':
-                case ' ':
-                    this.playSong(this.state.focusIndex);
-                    break;
-            }
-            if (e.code === 'MediaPlayPause') this.togglePlayPause();
-            if (e.code === 'MediaTrackNext') this.nextSong();
-            if (e.code === 'MediaTrackPrevious') this.prevSong();
-        });
-    }
-
-    highlightFocusRow() {
-        if (!this.songListEl) return;
-        Array.from(this.songListEl.children).forEach(r => r.classList.remove('focused'));
-        const row = this.songListEl.querySelector(`[data-index="${this.state.focusIndex}"]`);
-        row?.classList.add('focused');
+        } catch (e) { }
     }
 
     persistState() {
@@ -525,82 +528,31 @@ class MusicPlayer {
             volume: this.state.volume,
             repeatMode: this.state.repeatMode,
             isShuffled: this.state.isShuffled,
-            favorites: [...this.state.favorites],
-            currentSong: this.state.currentIndex !== -1
-                ? this.state.queue[this.state.currentIndex].id
-                : null
+            currentSong: this.getCurrentSong()?.id
         }));
     }
 
     restoreState() {
-        const saved = localStorage.getItem('musicPlayerState');
-        if (!saved) return;
+        try {
+            const saved = JSON.parse(localStorage.getItem('musicPlayerState'));
+            if (saved) {
+                this.state.repeatMode = saved.repeatMode || 'off';
+                this.state.isShuffled = !!saved.isShuffled;
+                if (this.state.isShuffled) this.btnShuffle.classList.add('active');
 
-        const s = JSON.parse(saved);
-        this.state.repeatMode = s.repeatMode ?? 'off';
-        this.state.isShuffled = !!s.isShuffled;
-        this.state.favorites = new Set(s.favorites || []);
-
-        if (s.currentSong) {
-            const idxInQueue = this.state.queue.findIndex(x => x.id === s.currentSong);
-            const idx = idxInQueue !== -1 ? idxInQueue : this.state.songs.findIndex(x => x.id === s.currentSong);
-            if (idx !== -1) {
-                this.state.currentIndex = idx;
-                const song = this.state.queue[idx];
-                this.audio.src = song.url;
-                this.updateNowPlaying(song);
-                this.highlightPlayingRow();
+                // Restore last song
+                if (saved.currentSong) {
+                    const idx = this.state.songs.findIndex(s => s.id === saved.currentSong);
+                    if (idx >= 0) {
+                        this.state.currentIndex = idx;
+                        const song = this.state.songs[idx];
+                        this.audio.src = song.url;
+                        this.updateUI();
+                    }
+                }
             }
-        }
-    }
-
-    incrementPlayCount(id) {
-        const counts = this.state.playCounts;
-        counts[id] = (counts[id] || 0) + 1;
-        localStorage.setItem('playCounts', JSON.stringify(counts));
-        this.updateMostPlayedBadge();
-
-        fetch(`${this.baseUrl}/api/play`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id })
-        }).catch(() => {});
-    }
-
-    updateMostPlayedBadge() {
-        if (!this.mostPlayedEl) return;
-        const entries = Object.entries(this.state.playCounts);
-        if (!entries.length) { this.mostPlayedEl.textContent = '—'; return; }
-        entries.sort((a, b) => b[1] - a[1]);
-        const [topId, count] = entries[0];
-        const song = this.state.songs.find(s => s.id === topId);
-        this.mostPlayedEl.textContent = song ? `${song.title} — ${song.artist} (${count})` : '—';
-    }
-
-    updatePlayPauseButton() {
-        if (!this.playPauseBtn) return;
-        this.playPauseBtn.innerHTML = this.state.isPlaying
-            ? `<i class="fas fa-pause"></i>`
-            : `<i class="fas fa-play"></i>`;
-    }
-
-    updateNowPlaying(song) {
-        if (this.npTitle) this.npTitle.textContent = song?.title || 'No song selected';
-        if (this.npArtist) this.npArtist.textContent = song?.artist || '—';
-        if (this.coverEl) {
-            // keep previous interface, subtle glow via CSS; optional inline cover image if song.cover exists
-            if (song?.cover) {
-                this.coverEl.style.backgroundImage = `url('${song.cover}')`;
-                this.coverEl.style.backgroundSize = 'cover';
-                this.coverEl.style.backgroundPosition = 'center';
-            } else {
-                this.coverEl.style.backgroundImage = '';
-            }
-        }
+        } catch (e) { }
     }
 }
 
-// Initialize once
-document.addEventListener('DOMContentLoaded', () => {
-    new MusicPlayer();
-});
+document.addEventListener('DOMContentLoaded', () => new MusicPlayer());

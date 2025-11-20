@@ -1,71 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Jabră • Desktop</title>
-  <link rel="stylesheet" href="css/theme.css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="" crossorigin="anonymous" /> 
-  <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
-  <meta name="theme-color" content="#0b1626">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Jabră Music • Desktop</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
+    <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
+    <meta name="theme-color" content="#000000">
 </head>
+
 <body class="device-desktop">
-  <div class="shell">
-    <aside class="sidebar">
-      <!-- {{ edit_1 }} replace text logo with SVG -->
-      <div class="logo">
-        <img class="logo-img" src="img/jabra.logo.svg" alt="Jabră" />
-      </div>
-      <nav class="nav-menu" aria-label="Navigation">
-        <button class="nav-item active" data-playlist="all"><i class="fas fa-music"></i><span>All Songs</span></button>
-        <button class="nav-item" data-playlist="devices"><i class="fas fa-network-wired"></i><span>Devices</span></button>
-      </nav>
-      <div class="footer">Made by Crisutf</div>
-    </aside>
 
-    <main class="main">
-      <header class="header">
-        <div class="search" aria-label="Search">
-          <i class="fas fa-search"></i>
-          <input id="searchInput" type="text" placeholder="Search songs..." />
-        </div>
-        <div class="badge">Most Played: <span id="mostPlayed">—</span></div>
-      </header>
+    <div class="app-shell">
 
-      <section class="now-playing" aria-label="Now Playing">
-        <div id="cover" class="cover"></div>
-        <div class="np-meta">
-          <div class="np-title" id="npTitle">No song selected</div>
-          <div class="np-artist" id="npArtist">—</div>
+        <!-- Sidebar (Always visible on desktop) -->
+        <aside id="sidebar" class="sidebar">
+            <div class="logo">
+                <img src="img/jabra.logo.svg" alt="Jabră" />
+                <span>Music</span>
+            </div>
 
-          <div class="controls">
-            <button id="prevBtn" class="btn" aria-label="Previous"><i class="fas fa-backward"></i></button>
-            <button id="playPauseBtn" class="btn" aria-label="Play/Pause"><i class="fas fa-play"></i></button>
-            <button id="nextBtn" class="btn" aria-label="Next"><i class="fas fa-forward"></i></button>
-            <button id="shuffleBtn" class="btn" aria-label="Shuffle"><i class="fas fa-random"></i></button>
-            <button id="repeatBtn" class="btn" aria-label="Repeat"><i class="fas fa-redo"></i></button>
-            <button class="btn" aria-label="Mute/Unmute" onclick="document.getElementById('audioEl').muted = !document.getElementById('audioEl').muted"><i class="fas fa-volume-off"></i></button>
-          </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="songs">
+                    <i class="fas fa-music"></i> <span>Songs</span>
+                </button>
+                <button class="nav-item" data-view="devices">
+                    <i class="fas fa-network-wired"></i> <span>Devices</span>
+                </button>
+            </nav>
 
-          <div class="time-row">
-            <div id="currentTime">0:00</div>
-            <input id="seekRange" type="range" min="0" max="100" step="0.1" aria-label="Seek" />
-            <div id="totalTime">0:00</div>
-          </div>
+            <div class="sidebar-footer">
+                <span style="color: var(--text-secondary); font-size: 0.8rem;">Designed by Crisutf</span>
+                <br />
+                <a href="https://github.com/Crisutf/jabra-music" target="_blank"
+                    style="color: var(--text-primary); font-size: 0.8rem; text-decoration: none;">GitHub</a>
+            </div>
+        </aside>
 
-          <div class="volume-row">
-            <span>Volume</span>
-            <input id="volumeRange" type="range" min="0" max="1" step="0.01" aria-label="Volume" />
-          </div>
-        </div>
-      </section>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <!-- No mobile toggle needed -->
 
-      <section class="song-list" id="songList" aria-label="Song list"></section>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input id="searchInput" type="text" placeholder="Search Library" />
+                </div>
 
-      <audio id="audioEl" preload="metadata"></audio>
-    </main>
-  </div>
+                <div class="header-badge" id="headerBadge"></div>
+            </header>
 
-  <script src="js/app.js" defer></script>
+            <div id="songList" class="song-list"></div>
+        </main>
+
+        <!-- Player Bar -->
+        <footer class="player-bar">
+            <div class="player-meta">
+                <div id="playerCover" class="player-cover"></div>
+                <div class="player-info">
+                    <div id="playerTitle" class="player-title">Not Playing</div>
+                    <div id="playerArtist" class="player-artist">—</div>
+                </div>
+            </div>
+
+            <div class="player-controls">
+                <div class="control-buttons">
+                    <button id="btnShuffle" class="btn-control" title="Shuffle"><i class="fas fa-random"></i></button>
+                    <button id="btnPrev" class="btn-control" title="Previous"><i
+                            class="fas fa-backward-step"></i></button>
+                    <button id="btnPlayPause" class="btn-control btn-play" title="Play/Pause"><i
+                            class="fas fa-play-circle"></i></button>
+                    <button id="btnNext" class="btn-control btn-next" title="Next"><i
+                            class="fas fa-forward-step"></i></button>
+                    <button id="btnRepeat" class="btn-control" title="Repeat"><i class="fas fa-repeat"></i></button>
+                </div>
+
+                <div class="progress-container">
+                    <span id="currentTime">0:00</span>
+                    <div id="progressBar" class="progress-bar">
+                        <div id="progressFill" class="progress-fill"></div>
+                    </div>
+                    <span id="totalTime">0:00</span>
+                </div>
+            </div>
+
+            <div class="player-volume">
+                <i class="fas fa-volume-low" style="font-size: 12px; color: var(--text-secondary);"></i>
+                <input id="volumeSlider" class="volume-slider" type="range" min="0" max="1" step="0.01" value="0.8" />
+                <i class="fas fa-volume-high" style="font-size: 12px; color: var(--text-secondary);"></i>
+            </div>
+        </footer>
+
+    </div>
+
+    <audio id="audioEl" preload="metadata"></audio>
+    <script src="js/app.js" defer></script>
 </body>
+
 </html>

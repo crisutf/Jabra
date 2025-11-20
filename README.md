@@ -11,7 +11,7 @@ Abre una terminal en la carpeta del proyecto e instala las dependencias:
 
 ```bash
 npm install
- ```
+
 ## Ejecución
 Inicia el servidor:
 
@@ -19,17 +19,17 @@ Inicia el servidor:
 npm start
  ```
 
-Por defecto el servidor corre en el puerto 80. Para cambiar el puerto (por ejemplo, 5000), establece la variable de entorno y luego inicia:
+Por defecto el servidor corre en el puerto 3000. Para cambiar el puerto (por ejemplo, 5000), establece la variable de entorno y luego inicia:
 
 ```bash
-set PORT=3000
+set PORT=5000
  ```
 
 ```bash
 npm start
  ```
 
-Abre http://localhost:80 (o el puerto que elijas) en tu navegador.
+Abre http://localhost:3000 (o el puerto que elijas) en tu navegador.
 
 ## Estructura del proyecto
 - server.js — Servidor Express y endpoints JSON
@@ -47,7 +47,16 @@ El archivo json/songs.json debe seguir la misma estructura JSON para cada canci�
 - Registra esa canción en json/songs.json siguiendo esta estructura:
 ```json
 [
-  { "id": "s001", "title": "TEST", "artist": "Crisutf", "album": null, "genre": null, "duration": 0, "cover": null, "url": "media/industry_kiss.mp3" },
+  {
+    "id": "song-001",
+    "title": "Mi Canción",
+    "artist": "Autor",
+    "album": null,
+    "genre": null,
+    "duration": 0,
+    "cover": null,
+    "url": "media/mi_cancion.mp3"
+  }
 ]
  ```
 
@@ -58,5 +67,10 @@ Notas:
 - duration : puede ser 0 si no lo conoces; la app mostrará el tiempo al reproducir.
 - cover : opcional; si no tienes portada, deja null .
 - url : ruta relativa al archivo dentro de media/ .
-Si más adelante quieres usar múltiples canciones, repite el mismo formato (un objeto por canción dentro del arreglo). Para no tener errores no repitais el id de la cancion y respetar el JSON.
+Si más adelante quieres usar múltiples canciones, repite el mismo formato (un objeto por canción dentro del arreglo). Para mantener el repositorio liviano, es preferible usar archivos pequeños o URLs externas.
 
+## Mantener el repositorio liviano
+- Evita subir audios pesados. Si es posible, usa URLs externas en json/songs.json .
+- Los archivos de estado del servidor están ignorados por Git:
+  - json/playcounts.server.json
+  - json/devices.server.json
