@@ -11,6 +11,7 @@ Abre una terminal en la carpeta del proyecto e instala las dependencias:
 
 ```bash
 npm install
+```
 
 ## Ejecución
 Inicia el servidor:
@@ -73,4 +74,5 @@ Si más adelante quieres usar múltiples canciones, repite el mismo formato (un 
 - Evita subir audios pesados. Si es posible, usa URLs externas en json/songs.json .
 - Los archivos de estado del servidor están ignorados por Git:
   - json/playcounts.server.json
+
   - json/devices.server.json
