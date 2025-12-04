@@ -49,16 +49,7 @@ El archivo json/songs.json debe seguir la misma estructura JSON para cada canci�
 - Registra esa canción en json/songs.json siguiendo esta estructura:
 ```json
 [
-  {
-    "id": "song-001",
-    "title": "Mi Canción",
-    "artist": "Autor",
-    "album": null,
-    "genre": null,
-    "duration": 0,
-    "cover": null,
-    "url": "media/mi_cancion.mp3"
-  }
+  {"id": "song-001","title": "Mi Canción","artist": "Autor","album": null,"genre": null,"duration": 0,"cover": null,"url": "media/mi_cancion.mp3"}
 ]
  ```
 
@@ -77,4 +68,5 @@ Si más adelante quieres usar múltiples canciones, repite el mismo formato (un 
   - json/playcounts.server.json
 
   - json/devices.server.json
+
 
