@@ -11,10 +11,11 @@ Abre una terminal en la carpeta del proyecto e instala las dependencias:
 
 ```bash
 npm install
+```
 
 ## Ejecución
 Inicia el servidor:
-```
+
 
 ```bash
 npm start
@@ -76,3 +77,4 @@ Si más adelante quieres usar múltiples canciones, repite el mismo formato (un 
   - json/playcounts.server.json
 
   - json/devices.server.json
+
