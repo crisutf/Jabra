@@ -14,10 +14,11 @@ npm install
 
 ## Ejecución
 Inicia el servidor:
+```
 
 ```bash
 npm start
- ```
+```
 
 Por defecto el servidor corre en el puerto 3000. Para cambiar el puerto (por ejemplo, 5000), establece la variable de entorno y luego inicia:
 
@@ -73,4 +74,5 @@ Si más adelante quieres usar múltiples canciones, repite el mismo formato (un 
 - Evita subir audios pesados. Si es posible, usa URLs externas en json/songs.json .
 - Los archivos de estado del servidor están ignorados por Git:
   - json/playcounts.server.json
+
   - json/devices.server.json
