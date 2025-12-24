@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     crossorigin="anonymous" />
   <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
+  <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -57,11 +58,56 @@
           <input id="searchInput" type="text" placeholder="Search Library" />
         </div>
 
+
+
+        <button id="togglePlayerBtn" class="player-toggle-btn">
+          <i class="fas fa-compact-disc"></i>
+          <span style="font-size: 12px; margin-left: 6px;">Player</span>
+        </button>
+
         <div class="header-badge" id="headerBadge"></div>
       </header>
 
       <div id="songList" class="song-list"></div>
     </main>
+
+    <!-- Full Screen Player Overlay (Hidden by default) -->
+    <div id="playerOverlay" class="player-overlay">
+      <div class="overlay-header">
+        <button id="closeOverlayBtn" class="btn-icon"><i class="fas fa-chevron-down"></i></button>
+        <span>Now Playing</span>
+        <button class="btn-icon"><i class="fas fa-ellipsis-h"></i></button>
+      </div>
+
+      <div class="overlay-art">
+        <div id="overlayCover" class="overlay-cover"></div>
+      </div>
+
+      <div class="overlay-info">
+        <div id="overlayTitle" class="overlay-title">Not Playing</div>
+        <div id="overlayArtist" class="overlay-artist">—</div>
+      </div>
+
+      <div class="overlay-progress">
+        <span id="overlayCurrentTime">0:00</span>
+        <div id="overlayProgressBar" class="progress-bar">
+          <div id="overlayProgressFill" class="progress-fill"></div>
+        </div>
+        <span id="overlayTotalTime">0:00</span>
+      </div>
+
+      <div class="overlay-controls">
+        <button id="overlayShuffle" class="btn-control"><i class="fas fa-random"></i></button>
+        <button id="overlayPrev" class="btn-control"><i class="fas fa-backward-step"></i></button>
+        <button id="overlayPlayPause" class="btn-control btn-play-lg"><i class="fas fa-play-circle"></i></button>
+        <button id="overlayNext" class="btn-control"><i class="fas fa-forward-step"></i></button>
+        <button id="overlayRepeat" class="btn-control"><i class="fas fa-repeat"></i></button>
+      </div>
+    </div>
+
+
+
+
 
     <!-- Player Bar -->
     <footer class="player-bar">
@@ -103,6 +149,12 @@
 
   <audio id="audioEl" preload="metadata"></audio>
   <script src="js/app.js" defer></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(() => console.log('Service Worker Registered'));
+    }
+  </script>
 </body>
 
 </html>

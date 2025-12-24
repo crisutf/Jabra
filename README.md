@@ -5,6 +5,7 @@ Reproductor de música ligero (desktop/móvil) con un servidor Express sencillo 
 ## Requisitos
 - Node.js 16+ (recomendado 18+)
 - No necesitas paquetes globales
+- **IMPORTANTE:** Para que la aplicación funcione correctamente en todos los dispositivos, el servidor debe estar ejecutándose en la IP `192.168.1.143`. Asegúrate de configurar tu red o el host para usar esta dirección IP específica.
 
 ## Instalación
 Abre una terminal en la carpeta del proyecto e instala las dependencias:

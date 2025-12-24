@@ -30,6 +30,20 @@ class MusicPlayer {
         this.mobileOverlay = document.getElementById('mobileOverlay');
         this.mobileNavToggle = document.getElementById('mobileNavToggle');
 
+        // Overlay Elements
+        this.playerOverlay = document.getElementById('playerOverlay');
+        this.togglePlayerBtn = document.getElementById('togglePlayerBtn');
+        this.closeOverlayBtn = document.getElementById('closeOverlayBtn');
+        this.overlayPlayPause = document.getElementById('overlayPlayPause');
+        this.overlayPrev = document.getElementById('overlayPrev');
+        this.overlayNext = document.getElementById('overlayNext');
+        this.overlayShuffle = document.getElementById('overlayShuffle');
+        this.overlayRepeat = document.getElementById('overlayRepeat');
+        this.overlayProgressBar = document.getElementById('overlayProgressBar');
+        this.overlayProgressFill = document.getElementById('overlayProgressFill');
+        this.overlayCurrentTime = document.getElementById('overlayCurrentTime');
+        this.overlayTotalTime = document.getElementById('overlayTotalTime');
+
         // State
         this.state = {
             songs: [],
@@ -56,6 +70,8 @@ class MusicPlayer {
     async init() {
         await this.loadSongs();
         this.setupEventListeners();
+        // this.initPWA(); // Removed PWA install logic
+        this.setupMediaSession();
         this.restoreState();
         this.updateMostPlayedBadge();
         this.startHeartbeat();
@@ -70,6 +86,30 @@ class MusicPlayer {
             this.postStatus(song, this.state.isPlaying);
         });
         window.addEventListener('beforeunload', () => this.postStatus(null, false));
+    }
+
+    initPWA() {
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            this.deferredPrompt = e;
+            if (this.installBtn) this.installBtn.style.display = 'flex';
+        });
+
+        this.installBtn?.addEventListener('click', async () => {
+            if (!this.deferredPrompt) return;
+            this.deferredPrompt.prompt();
+            const { outcome } = await this.deferredPrompt.userChoice;
+            console.log(`User response to the install prompt: ${outcome}`);
+            this.deferredPrompt = null;
+            if (outcome === 'accepted') {
+                this.installBtn.style.display = 'none';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            if (this.installBtn) this.installBtn.style.display = 'none';
+            console.log('PWA was installed');
+        });
     }
 
     getCurrentSong() {
@@ -203,6 +243,7 @@ class MusicPlayer {
                 this.updateUI();
                 this.persistState();
                 this.postStatus(song, true);
+                this.updateMediaSession();
             })
             .catch(err => console.error('Playback failed:', err));
     }
@@ -218,12 +259,14 @@ class MusicPlayer {
                 this.state.isPlaying = true;
                 this.updateUI();
                 this.postStatus(this.getCurrentSong(), true);
+                this.updateMediaSession();
             });
         } else {
             this.audio.pause();
             this.state.isPlaying = false;
             this.updateUI();
             this.postStatus(this.getCurrentSong(), false);
+            this.updateMediaSession();
         }
     }
 
@@ -344,6 +387,36 @@ class MusicPlayer {
                 if (idxEl) idxEl.innerHTML = '<i class="fas fa-volume-high"></i>';
             }
         }
+
+        // Overlay Updates
+        if (this.playerOverlay) {
+            const overlayTitle = document.getElementById('overlayTitle');
+            const overlayArtist = document.getElementById('overlayArtist');
+            const overlayCover = document.getElementById('overlayCover');
+            const icon = this.togglePlayerBtn?.querySelector('i');
+
+            if (overlayTitle) overlayTitle.textContent = song?.title || 'Not Playing';
+            if (overlayArtist) overlayArtist.textContent = song?.artist || '—';
+            if (overlayCover && song?.cover) {
+                overlayCover.style.backgroundImage = `url('${song.cover}')`;
+            } else if (overlayCover) {
+                overlayCover.style.backgroundImage = 'linear-gradient(135deg, #333, #111)';
+            }
+
+            // Icon animation
+            if (icon) {
+                icon.style.animationPlayState = this.state.isPlaying ? 'running' : 'paused';
+            }
+
+            // Overlay Controls State
+            if (this.overlayPlayPause) {
+                this.overlayPlayPause.innerHTML = this.state.isPlaying
+                    ? '<i class="fas fa-pause-circle"></i>'
+                    : '<i class="fas fa-play-circle"></i>';
+            }
+            if (this.overlayShuffle) this.overlayShuffle.classList.toggle('active', this.state.isShuffled);
+            if (this.overlayRepeat) this.overlayRepeat.classList.toggle('active', this.state.repeatMode !== 'off');
+        }
     }
 
     updateTime() {
@@ -356,7 +429,12 @@ class MusicPlayer {
         if (dur > 0 && this.progressFill) {
             const pct = (curr / dur) * 100;
             this.progressFill.style.width = `${pct}%`;
+            // Overlay Progress
+            if (this.overlayProgressFill) this.overlayProgressFill.style.width = `${pct}%`;
         }
+
+        if (this.overlayCurrentTime) this.overlayCurrentTime.textContent = this.formatTime(curr);
+        if (this.overlayTotalTime) this.overlayTotalTime.textContent = this.formatTime(dur);
     }
 
     setupEventListeners() {
@@ -424,7 +502,63 @@ class MusicPlayer {
 
         // Mobile Sidebar
         this.mobileNavToggle?.addEventListener('click', () => this.openSidebar());
-        this.mobileOverlay?.addEventListener('click', () => this.closeSidebar());
+        this.mobileOverlay?.addEventListener('click', () => {
+            this.closeSidebar();
+            this.closePlayerOverlay();
+        });
+
+        // Player Overlay
+        this.togglePlayerBtn?.addEventListener('click', () => this.togglePlayerOverlay());
+        this.closeOverlayBtn?.addEventListener('click', () => this.closePlayerOverlay());
+
+        this.overlayPlayPause?.addEventListener('click', () => this.togglePlayPause());
+        this.overlayNext?.addEventListener('click', () => this.nextSong());
+        this.overlayPrev?.addEventListener('click', () => this.prevSong());
+        this.overlayShuffle?.addEventListener('click', () => this.toggleShuffle());
+        this.overlayRepeat?.addEventListener('click', () => this.toggleRepeat());
+        this.overlayProgressBar?.addEventListener('click', (e) => this.seekAudio(e, true));
+    }
+
+    togglePlayerOverlay() {
+        if (!this.playerOverlay) return;
+        this.playerOverlay.classList.toggle('show');
+    }
+    closePlayerOverlay() {
+        this.playerOverlay?.classList.remove('show');
+    }
+
+    setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('play', () => this.togglePlayPause());
+            navigator.mediaSession.setActionHandler('pause', () => this.togglePlayPause());
+            navigator.mediaSession.setActionHandler('previoustrack', () => this.prevSong());
+            navigator.mediaSession.setActionHandler('nexttrack', () => this.nextSong());
+            navigator.mediaSession.setActionHandler('seekto', (details) => {
+                this.audio.currentTime = details.seekTime;
+            });
+        }
+    }
+
+    updateMediaSession() {
+        if (!('mediaSession' in navigator)) return;
+        const song = this.getCurrentSong();
+        if (!song) return;
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: song.title || 'Unknown Title',
+            artist: song.artist || 'Unknown Artist',
+            artwork: song.cover ? [{ src: song.cover, sizes: '512x512', type: 'image/jpeg' }] : []
+        });
+
+        navigator.mediaSession.playbackState = this.state.isPlaying ? 'playing' : 'paused';
+    }
+
+    seekAudio(e, isOverlay = false) {
+        if (!this.audio.duration) return;
+        const bar = isOverlay ? this.overlayProgressBar : this.progressBar;
+        const rect = bar.getBoundingClientRect();
+        const pos = (e.clientX - rect.left) / rect.width;
+        this.audio.currentTime = pos * this.audio.duration;
     }
 
     openSidebar() {
@@ -555,4 +689,34 @@ class MusicPlayer {
     }
 }
 
-document.addEventListener('DOMContentLoaded', () => new MusicPlayer());
+document.addEventListener('DOMContentLoaded', () => {
+    window.player = new MusicPlayer();
+
+    // Native Bridge for Android Notifications
+    const originalPost = window.player.postStatus.bind(window.player);
+    window.player.postStatus = async (song, isPlaying) => {
+        originalPost(song, isPlaying);
+        if (window.AndroidBridge && song) {
+            const duration = window.player.audio.duration || 0;
+            const position = window.player.audio.currentTime || 0;
+            window.AndroidBridge.updateMetadata(
+                song.title || "Unknown",
+                song.artist || "Unknown",
+                isPlaying,
+                duration * 1000, // Android expects ms
+                position * 1000
+            );
+        }
+    };
+
+    // Also update on seek
+    window.player.audio.addEventListener('seeked', () => {
+        window.player.postStatus(window.player.getCurrentSong(), window.player.state.isPlaying);
+    });
+});
+
+// Global API for Android to call
+window.api = {
+    nextSong: () => window.player?.nextSong(),
+    prevSong: () => window.player?.prevSong()
+};

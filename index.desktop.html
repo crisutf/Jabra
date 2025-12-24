@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
         crossorigin="anonymous" />
     <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
 </head>
 
@@ -50,7 +51,15 @@
                     <input id="searchInput" type="text" placeholder="Search Library" />
                 </div>
 
-                <div class="header-badge" id="headerBadge"></div>
+
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <button id="installBtn" class="header-badge"
+                        style="display: none; cursor: pointer; border: none; align-items: center; gap: 6px; background: rgba(10, 132, 255, 0.15); color: #0a84ff;">
+                        <i class="fas fa-download"></i> <span>Install App</span>
+                    </button>
+                    <div class="header-badge" id="headerBadge"></div>
+                </div>
             </header>
 
             <div id="songList" class="song-list"></div>
@@ -98,6 +107,12 @@
 
     <audio id="audioEl" preload="metadata"></audio>
     <script src="js/app.js" defer></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('Service Worker Registered'));
+        }
+    </script>
 </body>
 
 </html>
