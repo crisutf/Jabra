@@ -5,7 +5,11 @@ Reproductor de música ligero (desktop/móvil) con un servidor Express sencillo 
 ## Requisitos
 - Node.js 16+ (recomendado 18+)
 - No necesitas paquetes globales
-- **IMPORTANTE:** Para que la aplicación funcione correctamente en todos los dispositivos, el servidor debe estar ejecutándose en la IP `192.168.1.143`. Asegúrate de configurar tu red o el host para usar esta dirección IP específica.
+---
+
+# **IMPORTANTE:**
+- Para que la aplicación (Movil) funcione correctamente en el movil, el servidor debe estar ejecutándose en la IP `192.168.1.143`. Asegúrate de configurar tu red o el host para usar esta dirección IP específica.
+- Para que la aplicación (PC) funcione correctamente en los Ordenadores, el servidor debe estar ejecutándose en la IP `192.168.1.143` y encima en el archivo `C:\Windows\System32\drivers\etc\hosts` deben de poner esto `192.168.1.143	jabra.tf`. (Solo en PC)
 
 ## Instalación
 Abre una terminal en la carpeta del proyecto e instala las dependencias:
@@ -69,5 +73,6 @@ Si más adelante quieres usar múltiples canciones, repite el mismo formato (un 
   - json/playcounts.server.json
 
   - json/devices.server.json
+
 
 
