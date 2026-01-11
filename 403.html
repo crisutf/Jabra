@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Jabră • 403 Prohibido</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            background: var(--bg-deep);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .bg-glow {
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(255, 45, 85, 0.15) 0%, transparent 70%);
+            opacity: 0.2;
+            z-index: -1;
+            filter: blur(90px);
+            animation: pulse 6s ease-in-out infinite alternate;
+        }
+
+        .error-container {
+            background: rgba(18, 18, 20, 0.4);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 420px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 45, 85, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px auto;
+            border: 1px solid rgba(255, 45, 85, 0.2);
+            box-shadow: 0 0 30px rgba(255, 45, 85, 0.15);
+        }
+
+        .icon-circle i {
+            font-size: 32px;
+            color: #ff2d55;
+        }
+
+        .error-code {
+            font-size: 90px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff2d55, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            line-height: 0.9;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 20px rgba(255, 45, 85, 0.3));
+            font-family: 'SF Pro Display', system-ui, sans-serif;
+            letter-spacing: -4px;
+        }
+
+        .error-title {
+            font-size: 26px;
+            margin: 10px 0 12px 0;
+            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .btn-home {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .btn-home::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, #ff2d55, var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .btn-home:hover {
+            transform: scale(1.03) translateY(-2px);
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-home:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.15;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 0.25;
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="error-container">
+        <div class="icon-circle">
+            <i class="fas fa-ban"></i>
+        </div>
+
+        <h1 class="error-code">403</h1>
+        <h2 class="error-title">Acceso Prohibido</h2>
+
+        <p class="error-message">
+            No estás en la lista VIP para esta zona.<br>
+            Este área es solo para artistas autorizados.
+        </p>
+
+        <a href="/" class="btn-home">
+            <i class="fas fa-arrow-left"></i> Volver a la Pista
+        </a>
+    </div>
+</body>
+
+</html>

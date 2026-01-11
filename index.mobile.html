@@ -8,6 +8,9 @@
   <link rel="stylesheet" href="css/theme.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
     crossorigin="anonymous" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#000000">
@@ -26,7 +29,6 @@
     <aside id="sidebar" class="sidebar">
       <div class="logo">
         <img src="img/jabra.logo.svg" alt="Jabră" />
-        <span>Music</span>
       </div>
 
       <nav class="nav-menu">
@@ -49,61 +51,33 @@
     <!-- Main Content -->
     <main class="main-content">
       <header class="header">
-        <button id="mobileNavToggle" class="mobile-nav-toggle">
+        <button id="mobileNavToggle" class="mobile-nav-toggle"
+          style="background:none; border:none; color:white; font-size:20px;">
           <i class="fas fa-bars"></i>
         </button>
 
         <div class="search-bar">
           <i class="fas fa-search"></i>
-          <input id="searchInput" type="text" placeholder="Search Library" />
+          <input id="searchInput" type="text" placeholder="What do you want to play?" />
         </div>
 
-
-
-        <button id="togglePlayerBtn" class="player-toggle-btn">
+        <button id="togglePlayerBtn" class="player-toggle-btn" style="display:none;">
+          <!-- Hidden as we have fixed bar -->
           <i class="fas fa-compact-disc"></i>
-          <span style="font-size: 12px; margin-left: 6px;">Player</span>
         </button>
 
         <div class="header-badge" id="headerBadge"></div>
       </header>
 
-      <div id="songList" class="song-list"></div>
+      <div class="content-wrapper">
+        <div class="hero">
+          <h1>Good Evening</h1>
+          <p>Recommended for you</p>
+        </div>
+        <div id="songList" class="song-list"></div>
+      </div>
     </main>
 
-    <!-- Full Screen Player Overlay (Hidden by default) -->
-    <div id="playerOverlay" class="player-overlay">
-      <div class="overlay-header">
-        <button id="closeOverlayBtn" class="btn-icon"><i class="fas fa-chevron-down"></i></button>
-        <span>Now Playing</span>
-        <button class="btn-icon"><i class="fas fa-ellipsis-h"></i></button>
-      </div>
-
-      <div class="overlay-art">
-        <div id="overlayCover" class="overlay-cover"></div>
-      </div>
-
-      <div class="overlay-info">
-        <div id="overlayTitle" class="overlay-title">Not Playing</div>
-        <div id="overlayArtist" class="overlay-artist">—</div>
-      </div>
-
-      <div class="overlay-progress">
-        <span id="overlayCurrentTime">0:00</span>
-        <div id="overlayProgressBar" class="progress-bar">
-          <div id="overlayProgressFill" class="progress-fill"></div>
-        </div>
-        <span id="overlayTotalTime">0:00</span>
-      </div>
-
-      <div class="overlay-controls">
-        <button id="overlayShuffle" class="btn-control"><i class="fas fa-random"></i></button>
-        <button id="overlayPrev" class="btn-control"><i class="fas fa-backward-step"></i></button>
-        <button id="overlayPlayPause" class="btn-control btn-play-lg"><i class="fas fa-play-circle"></i></button>
-        <button id="overlayNext" class="btn-control"><i class="fas fa-forward-step"></i></button>
-        <button id="overlayRepeat" class="btn-control"><i class="fas fa-repeat"></i></button>
-      </div>
-    </div>
 
 
 

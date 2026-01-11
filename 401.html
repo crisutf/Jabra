@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <title>Jabră • 401 No Autorizado</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="icon" type="image/svg+xml" href="img/jabra.favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+        crossorigin="anonymous" />
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            background: var(--bg-deep);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Background decorative elements */
+        .bg-glow {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            opacity: 0.15;
+            z-index: -1;
+            filter: blur(80px);
+            animation: pulse 8s ease-in-out infinite alternate;
+        }
+
+        .error-container {
+            background: rgba(18, 18, 20, 0.4);
+            padding: 40px;
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 420px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: slideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Music equalizer animation bars */
+        .equalizer {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 4px;
+            height: 40px;
+            margin-bottom: 20px;
+        }
+
+        .bar {
+            width: 6px;
+            background: var(--primary);
+            border-radius: 4px;
+            animation: bounce 1s ease-in-out infinite;
+        }
+
+        .bar:nth-child(1) {
+            height: 20px;
+            animation-duration: 0.8s;
+            background: var(--accent);
+        }
+
+        .bar:nth-child(2) {
+            height: 35px;
+            animation-duration: 1.2s;
+        }
+
+        .bar:nth-child(3) {
+            height: 25px;
+            animation-duration: 0.6s;
+            opacity: 0.5;
+        }
+
+        .bar:nth-child(4) {
+            height: 30px;
+            animation-duration: 1.0s;
+            background: var(--accent);
+        }
+
+        .bar:nth-child(5) {
+            height: 15px;
+            animation-duration: 0.7s;
+        }
+
+        .error-code {
+            font-size: 90px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+            line-height: 1;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 0 30px rgba(0, 243, 255, 0.4));
+            font-family: 'SF Pro Display', system-ui, sans-serif;
+            letter-spacing: -4px;
+        }
+
+        .error-icon {
+            font-size: 40px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+        }
+
+        .error-title {
+            font-size: 26px;
+            margin: 10px 0 12px 0;
+            color: var(--text-primary);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .error-message {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            font-size: 16px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .btn-home {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            text-decoration: none;
+            padding: 14px 36px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-home::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .btn-home:hover {
+            transform: scale(1.03) translateY(-2px);
+            border-color: transparent;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-home:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            100% {
+                transform: scaleY(0.5);
+            }
+
+            50% {
+                transform: scaleY(1);
+            }
+        }
+
+        @keyframes pulse {
+            from {
+                opacity: 0.1;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 0.2;
+                transform: scale(1.1);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-glow"></div>
+
+    <div class="error-container">
+        <!-- Visual equalizer element -->
+        <div class="equalizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <h1 class="error-code">401</h1>
+        <h2 class="error-title">Acceso Denegado</h2>
+
+        <p class="error-message">
+            Parece que no tienes entrada para este concierto.<br>
+            Inicia sesión para disfrutar de la música.
+        </p>
+
+        <a href="/" class="btn-home">
+            <i class="fas fa-ticket"></i> Ir al Inicio
+        </a>
+    </div>
+</body>
+
+</html>
